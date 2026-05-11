@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Circuit &amp; Tabata Designer</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: #000; color: #f5f5f5; min-height: 100vh; }
+    .page { max-width: 960px; margin: 0 auto; padding: 32px; }
+    h1 { margin: 0; font-size: 2.5rem; text-align: center; background: linear-gradient(45deg, #ff6b6b, #4ecdc4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700; }
+    .subtitle { text-align: center; color: #90a4ae; margin: 8px 0 28px; font-size: 1rem; }
+    .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 24px; margin-bottom: 24px; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+    .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+    label { display: flex; flex-direction: column; font-size: 0.9rem; color: #b0bec5; font-weight: 500; }
+    select, input[type="text"] { padding: 12px 16px; margin-top: 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.07); color: #eee; font-size: 1rem; transition: border-color 0.3s, box-shadow 0.3s; }
+    select:focus, input[type="text"]:focus { outline: none; border-color: #4ecdc4; box-shadow: 0 0 0 3px rgba(78,205,196,0.2); }
+    select option { background: #111; color: #eee; }
+    button { border: none; border-radius: 12px; padding: 12px 24px; font-size: 1rem; font-weight: 600; cursor: pointer; background: linear-gradient(45deg, #ff6b6b, #ffa726); color: white; box-shadow: 0 4px 15px rgba(255,107,107,0.3); transition: transform 0.2s, box-shadow 0.2s; }
+    button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,107,107,0.4); }
+    button:active { transform: translateY(0); }
+    button:disabled { background: #444; color: #777; cursor: not-allowed; box-shadow: none; transform: none; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+    .tab-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #b0bec5; padding: 12px 28px; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: none; }
+    .tab-btn:hover { background: rgba(255,255,255,0.1); color: #eee; transform: translateY(-1px); box-shadow: none; }
+    .tab-btn.active { background: linear-gradient(45deg, #ff6b6b, #ffa726); color: #fff; border-color: transparent; box-shadow: 0 4px 15px rgba(255,107,107,0.3); }
+
+    /* Category colours */
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+    .badge-strength { background: rgba(239,83,80,0.18); color: #ef5350; border: 1px solid rgba(239,83,80,0.4); }
+    .badge-cardio   { background: rgba(38,198,218,0.18); color: #26c6da; border: 1px solid rgba(38,198,218,0.4); }
+    .badge-core     { background: rgba(171,71,188,0.18); color: #ab47bc; border: 1px solid rgba(171,71,188,0.4); }
+
+    /* Count selects */
+    .count-group { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .count-label { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+    .count-label.strength { color: #ef5350; }
+    .count-label.cardio   { color: #26c6da; }
+    .count-label.core     { color: #ab47bc; }
+    .count-select { width: 80px; text-align: center; padding: 12px 8px; margin-top: 0; }
+
+    /* Circuit exercise items */
+    .exercise-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 8px; transition: background 0.2s; }
+    .exercise-item:hover { background: rgba(255,255,255,0.06); }
+    .exercise-num { font-size: 0.85rem; color: #546e7a; font-weight: 700; min-width: 28px; }
+    .exercise-name { flex: 1; font-size: 1rem; font-weight: 600; color: #e8eaf6; }
+    .reroll-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #90a4ae; padding: 6px 14px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; box-shadow: none; }
+    .reroll-btn:hover { background: rgba(255,255,255,0.15); color: #eee; transform: translateY(-1px); box-shadow: none; }
+
+    /* Category sections */
+    .category-section { margin-bottom: 20px; }
+    .category-header { margin: 0 0 12px; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .category-header.strength { color: #ef5350; }
+    .category-header.cardio   { color: #26c6da; }
+    .category-header.core     { color: #ab47bc; }
+
+    /* Exercise database */
+    .db-exercise-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 8px; transition: background 0.2s; }
+    .db-exercise-item:hover { background: rgba(255,255,255,0.06); }
+    .db-exercise-name { flex: 1; font-size: 0.95rem; font-weight: 500; color: #e8eaf6; }
+    .delete-btn { background: rgba(239,83,80,0.1); border: 1px solid rgba(239,83,80,0.3); color: #ef9a9a; padding: 5px 12px; font-size: 0.8rem; border-radius: 8px; font-weight: 600; box-shadow: none; }
+    .delete-btn:hover { background: rgba(239,83,80,0.25); color: #ef5350; box-shadow: none; transform: none; }
+
+    /* Filter buttons */
+    .filter-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+    .filter-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #90a4ae; padding: 8px 18px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; box-shadow: none; transition: all 0.2s; }
+    .filter-btn:hover { background: rgba(255,255,255,0.1); transform: none; box-shadow: none; }
+    .filter-btn.active { background: rgba(255,255,255,0.12); color: #eee; border-color: rgba(255,255,255,0.3); }
+    .filter-btn.active.strength-btn { background: rgba(239,83,80,0.2); color: #ef5350; border-color: rgba(239,83,80,0.4); }
+    .filter-btn.active.cardio-btn   { background: rgba(38,198,218,0.2); color: #26c6da; border-color: rgba(38,198,218,0.4); }
+    .filter-btn.active.core-btn     { background: rgba(171,71,188,0.2); color: #ab47bc; border-color: rgba(171,71,188,0.4); }
+
+    .section-title { font-weight: 700; font-size: 1rem; color: #e8eaf6; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .stats { font-size: 0.82rem; color: #546e7a; }
+    .empty-msg { text-align: center; color: #546e7a; padding: 32px; font-size: 0.95rem; }
+    .divider { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); background: rgba(30,30,30,0.96); color: #fff; padding: 14px 28px; border-radius: 14px; font-size: 0.95rem; font-weight: 600; box-shadow: 0 8px 32px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.12); pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 1000; white-space: nowrap; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div style="margin-bottom: 28px;">
+      <h1>Circuit &amp; Tabata Designer</h1>
+      <p class="subtitle">v0.1</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="circuit">Circuit Designer</button>
+      <button class="tab-btn" data-tab="exercises">Exercise Database</button>
+    </div>
+
+    <!-- =================== CIRCUIT DESIGNER TAB =================== -->
+    <div id="tab-circuit" class="tab-content">
+
+      <!-- Configuration -->
+      <div class="card">
+        <div class="section-title">Circuit Configuration</div>
+        <div class="row" style="gap: 32px; justify-content: flex-start;">
+          <div class="count-group">
+            <span class="count-label strength">Strength</span>
+            <select id="strengthCount" class="count-select"></select>
+          </div>
+          <div class="count-group">
+            <span class="count-label cardio">Cardio</span>
+            <select id="cardioCount" class="count-select"></select>
+          </div>
+          <div class="count-group">
+            <span class="count-label core">Core</span>
+            <select id="coreCount" class="count-select"></select>
+          </div>
+          <div style="display:flex; align-items:flex-end; padding-bottom:2px;">
+            <button id="generateBtn">Generate Circuit</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generated Circuit -->
+      <div class="card" id="circuitResult" style="display:none;">
+        <div class="section-title">
+          <span id="circuitTitle">Generated Circuit</span>
+          <span id="circuitTotalBadge" class="stats"></span>
+        </div>
+        <div id="circuitSections"></div>
+        <hr class="divider" />
+        <div class="row">
+          <label style="flex:1;">Circuit Name
+            <input id="circuitName" type="text" placeholder="e.g. Monday Circuit" style="width:100%; box-sizing:border-box;" />
+          </label>
+          <div style="display:flex; align-items:flex-end;">
+            <button id="saveCircuitBtn">Save Circuit</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Load Saved Circuits -->
+      <div class="card">
+        <div class="section-title">Saved Circuits</div>
+        <div class="row">
+          <label>Select Circuit
+            <select id="loadCircuitSelect" style="min-width:220px;">
+              <option value="">-- Select a circuit --</option>
+            </select>
+          </label>
+          <div style="display:flex; align-items:flex-end; gap:8px;">
+            <button id="loadCircuitBtn" disabled>Load</button>
+            <button id="deleteCircuitBtn" disabled>Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== EXERCISE DATABASE TAB =================== -->
+    <div id="tab-exercises" class="tab-content" style="display:none;">
+
+      <!-- Add Exercise -->
+      <div class="card">
+        <div class="section-title">Add Exercise</div>
+        <div class="row">
+          <label>Exercise Name
+            <input id="exName" type="text" placeholder="e.g. Push-ups" style="min-width:220px;" />
+          </label>
+          <label>Category
+            <select id="exCategory">
+              <option value="Strength">Strength</option>
+              <option value="Cardio">Cardio</option>
+              <option value="Core">Core</option>
+            </select>
+          </label>
+          <div style="display:flex; align-items:flex-end;">
+            <button id="addExBtn">Add Exercise</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exercise List -->
+      <div class="card">
+        <div class="section-title">
+          Exercise Library
+          <span class="stats" id="exStats"></span>
+        </div>
+        <div class="filter-row">
+          <button class="filter-btn all-btn active" data-cat="All">All</button>
+          <button class="filter-btn strength-btn" data-cat="Strength">Strength</button>
+          <button class="filter-btn cardio-btn" data-cat="Cardio">Cardio</button>
+          <button class="filter-btn core-btn" data-cat="Core">Core</button>
+        </div>
+        <div id="exerciseList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ─── State ───────────────────────────────────────────────────────────────
+    let allExercises = [];   // [{ id, name, category }]
+    let currentCircuit = { strength: [], cardio: [], core: [] };
+    let currentFilter = 'All';
+    let currentCircuitTitle = 'Generated Circuit';
+
+    // ─── DOM refs ─────────────────────────────────────────────────────────────
+    const strengthCountEl   = document.getElementById('strengthCount');
+    const cardioCountEl     = document.getElementById('cardioCount');
+    const coreCountEl       = document.getElementById('coreCount');
+    const generateBtn       = document.getElementById('generateBtn');
+    const circuitResult     = document.getElementById('circuitResult');
+    const circuitSections   = document.getElementById('circuitSections');
+    const circuitTitleEl    = document.getElementById('circuitTitle');
+    const circuitTotalBadge = document.getElementById('circuitTotalBadge');
+    const circuitNameEl     = document.getElementById('circuitName');
+    const saveCircuitBtn    = document.getElementById('saveCircuitBtn');
+    const loadCircuitSelect = document.getElementById('loadCircuitSelect');
+    const loadCircuitBtn    = document.getElementById('loadCircuitBtn');
+    const deleteCircuitBtn  = document.getElementById('deleteCircuitBtn');
+    const exNameEl          = document.getElementById('exName');
+    const exCategoryEl      = document.getElementById('exCategory');
+    const addExBtn          = document.getElementById('addExBtn');
+    const exerciseListEl    = document.getElementById('exerciseList');
+    const exStatsEl         = document.getElementById('exStats');
+    const toastEl           = document.getElementById('toast');
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3000);
+    }
+
+    function buildCountOptions(el, defaultVal = 4, max = 15) {
+      el.innerHTML = '';
+      for (let i = 0; i <= max; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = i;
+        if (i === defaultVal) opt.selected = true;
+        el.appendChild(opt);
+      }
+    }
+
+    function pickRandom(arr, count) {
+      return [...arr].sort(() => Math.random() - 0.5).slice(0, count);
+    }
+
+    // ─── Initialise count selects ─────────────────────────────────────────────
+    buildCountOptions(strengthCountEl, 4);
+    buildCountOptions(cardioCountEl, 2);
+    buildCountOptions(coreCountEl, 2);
+
+    // ─── Tabs ─────────────────────────────────────────────────────────────────
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).style.display = '';
+      });
+    });
+
+    // ─── Exercise Database ────────────────────────────────────────────────────
+    async function fetchExercises() {
+      try {
+        const res = await fetch('/api/exercises');
+        allExercises = await res.json();
+      } catch (e) {
+        console.error('Failed to fetch exercises:', e);
+      }
+      renderExerciseList();
+    }
+
+    function renderExerciseList() {
+      const filtered = currentFilter === 'All'
+        ? allExercises
+        : allExercises.filter(e => e.category === currentFilter);
+
+      const counts = { Strength: 0, Cardio: 0, Core: 0 };
+      allExercises.forEach(e => counts[e.category]++);
+      exStatsEl.textContent =
+        `${allExercises.length} total — ${counts.Strength} Strength · ${counts.Cardio} Cardio · ${counts.Core} Core`;
+
+      if (filtered.length === 0) {
+        exerciseListEl.innerHTML = '<div class="empty-msg">No exercises here yet. Add some above!</div>';
+        return;
+      }
+
+      exerciseListEl.innerHTML = '';
+      filtered.forEach(ex => {
+        const item = document.createElement('div');
+        item.className = 'db-exercise-item';
+        item.innerHTML = `
+          <span class="db-exercise-name">${escHtml(ex.name)}</span>
+          <span class="badge badge-${ex.category.toLowerCase()}">${escHtml(ex.category)}</span>
+          <button class="delete-btn" data-id="${ex.id}">Remove</button>
+        `;
+        item.querySelector('.delete-btn').addEventListener('click', () => deleteExercise(ex.id, ex.name));
+        exerciseListEl.appendChild(item);
+      });
+    }
+
+    async function addExercise() {
+      const name = exNameEl.value.trim();
+      const category = exCategoryEl.value;
+      if (!name) { showToast('Please enter an exercise name'); return; }
+      try {
+        const res = await fetch('/api/exercises', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, category }),
+        });
+        if (!res.ok) { showToast('Failed to add exercise'); return; }
+        const newEx = await res.json();
+        allExercises.push(newEx);
+        allExercises.sort((a, b) =>
+          a.category.localeCompare(b.category) || a.name.localeCompare(b.name)
+        );
+        exNameEl.value = '';
+        renderExerciseList();
+        showToast(`"${name}" added to ${category}`);
+      } catch (e) {
+        showToast('Failed to add exercise');
+      }
+    }
+
+    async function deleteExercise(id, name) {
+      if (!confirm(`Remove "${name}" from the database?`)) return;
+      try {
+        await fetch(`/api/exercises/${id}`, { method: 'DELETE' });
+        allExercises = allExercises.filter(e => e.id !== id);
+        renderExerciseList();
+        showToast(`"${name}" removed`);
+      } catch (e) {
+        showToast('Failed to remove exercise');
+      }
+    }
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.cat;
+        renderExerciseList();
+      });
+    });
+
+    addExBtn.addEventListener('click', addExercise);
+    exNameEl.addEventListener('keydown', e => { if (e.key === 'Enter') addExercise(); });
+
+    // ─── Circuit Generator ────────────────────────────────────────────────────
+    function generateCircuit() {
+      const sCount  = parseInt(strengthCountEl.value) || 0;
+      const caCount = parseInt(cardioCountEl.value) || 0;
+      const coCount = parseInt(coreCountEl.value) || 0;
+
+      if (sCount + caCount + coCount === 0) {
+        showToast('Select at least 1 exercise to generate a circuit');
+        return;
+      }
+
+      const pools = {
+        strength: allExercises.filter(e => e.category === 'Strength'),
+        cardio:   allExercises.filter(e => e.category === 'Cardio'),
+        core:     allExercises.filter(e => e.category === 'Core'),
+      };
+
+      if (sCount  > 0 && pools.strength.length === 0) { showToast('No Strength exercises in the database yet'); return; }
+      if (caCount > 0 && pools.cardio.length   === 0) { showToast('No Cardio exercises in the database yet'); return; }
+      if (coCount > 0 && pools.core.length     === 0) { showToast('No Core exercises in the database yet'); return; }
+
+      if (sCount  > pools.strength.length) showToast(`Only ${pools.strength.length} Strength exercise(s) available — using all`);
+      else if (caCount > pools.cardio.length) showToast(`Only ${pools.cardio.length} Cardio exercise(s) available — using all`);
+      else if (coCount > pools.core.length)   showToast(`Only ${pools.core.length} Core exercise(s) available — using all`);
+
+      currentCircuit = {
+        strength: pickRandom(pools.strength, Math.min(sCount,  pools.strength.length)),
+        cardio:   pickRandom(pools.cardio,   Math.min(caCount, pools.cardio.length)),
+        core:     pickRandom(pools.core,     Math.min(coCount, pools.core.length)),
+      };
+
+      currentCircuitTitle = 'Generated Circuit';
+      renderCircuit();
+    }
+
+    function renderCircuit() {
+      circuitResult.style.display = '';
+      circuitTitleEl.textContent = currentCircuitTitle;
+
+      const total = currentCircuit.strength.length + currentCircuit.cardio.length + currentCircuit.core.length;
+      circuitTotalBadge.textContent = `${total} exercise${total !== 1 ? 's' : ''}`;
+
+      circuitSections.innerHTML = '';
+
+      const sections = [
+        { key: 'strength', label: 'Strength' },
+        { key: 'cardio',   label: 'Cardio'   },
+        { key: 'core',     label: 'Core'     },
+      ];
+
+      sections.forEach(({ key, label }) => {
+        const exercises = currentCircuit[key];
+        if (!exercises.length) return;
+
+        const section = document.createElement('div');
+        section.className = 'category-section';
+        section.innerHTML = `<div class="category-header ${key}">${label} (${exercises.length})</div>`;
+
+        exercises.forEach((ex, idx) => {
+          const item = document.createElement('div');
+          item.className = 'exercise-item';
+          item.innerHTML = `
+            <span class="exercise-num">${idx + 1}</span>
+            <span class="exercise-name">${escHtml(ex.name)}</span>
+            <button class="reroll-btn" data-key="${key}" data-idx="${idx}" title="Swap for a different exercise">&#8635; Re-roll</button>
+          `;
+          item.querySelector('.reroll-btn').addEventListener('click', e => {
+            const btn = e.currentTarget;
+            rerollExercise(btn.dataset.key, parseInt(btn.dataset.idx));
+          });
+          section.appendChild(item);
+        });
+
+        circuitSections.appendChild(section);
+      });
+    }
+
+    function rerollExercise(key, idx) {
+      const catMap = { strength: 'Strength', cardio: 'Cardio', core: 'Core' };
+      const category = catMap[key];
+      const usedIds = new Set(currentCircuit[key].map(e => e.id));
+      const pool = allExercises.filter(e => e.category === category && !usedIds.has(e.id));
+
+      if (pool.length === 0) {
+        showToast(`No more ${category} exercises to swap in`);
+        return;
+      }
+
+      currentCircuit[key][idx] = pool[Math.floor(Math.random() * pool.length)];
+      renderCircuit();
+    }
+
+    // ─── Save / Load circuits ─────────────────────────────────────────────────
+    async function saveCircuit() {
+      const name = circuitNameEl.value.trim();
+      if (!name) { showToast('Please enter a circuit name'); return; }
+
+      const total = currentCircuit.strength.length + currentCircuit.cardio.length + currentCircuit.core.length;
+      if (total === 0) { showToast('Generate a circuit first'); return; }
+
+      const data = {
+        exercises: {
+          strength: currentCircuit.strength,
+          cardio:   currentCircuit.cardio,
+          core:     currentCircuit.core,
+        },
+        counts: {
+          strength: parseInt(strengthCountEl.value) || 0,
+          cardio:   parseInt(cardioCountEl.value)   || 0,
+          core:     parseInt(coreCountEl.value)     || 0,
+        },
+      };
+
+      try {
+        await fetch(`/api/circuits/${encodeURIComponent(name)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        circuitNameEl.value = '';
+        await populateSavedCircuits();
+        showToast(`Circuit "${name}" saved!`);
+      } catch (e) {
+        showToast('Failed to save circuit');
+      }
+    }
+
+    async function populateSavedCircuits() {
+      loadCircuitSelect.innerHTML = '<option value="">-- Select a circuit --</option>';
+      try {
+        const res = await fetch('/api/circuits');
+        const names = await res.json();
+        names.forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          loadCircuitSelect.appendChild(opt);
+        });
+      } catch (e) {
+        console.error('Failed to load circuits:', e);
+      }
+      const has = loadCircuitSelect.options.length > 1;
+      loadCircuitBtn.disabled = !has;
+      deleteCircuitBtn.disabled = !has;
+    }
+
+    async function loadCircuit() {
+      const name = loadCircuitSelect.value;
+      if (!name) return;
+      try {
+        const res = await fetch(`/api/circuits/${encodeURIComponent(name)}`);
+        if (!res.ok) { showToast('Circuit not found'); return; }
+        const data = await res.json();
+        currentCircuit = {
+          strength: data.exercises?.strength || [],
+          cardio:   data.exercises?.cardio   || [],
+          core:     data.exercises?.core     || [],
+        };
+        strengthCountEl.value = data.counts?.strength ?? 0;
+        cardioCountEl.value   = data.counts?.cardio   ?? 0;
+        coreCountEl.value     = data.counts?.core     ?? 0;
+        currentCircuitTitle   = name;
+        circuitNameEl.value   = name;
+        renderCircuit();
+      } catch (e) {
+        showToast('Failed to load circuit');
+      }
+    }
+
+    async function deleteCircuit() {
+      const name = loadCircuitSelect.value;
+      if (!name) return;
+      if (!confirm(`Delete circuit "${name}"?`)) return;
+      try {
+        await fetch(`/api/circuits/${encodeURIComponent(name)}`, { method: 'DELETE' });
+        await populateSavedCircuits();
+        showToast(`Circuit "${name}" deleted`);
+      } catch (e) {
+        showToast('Failed to delete circuit');
+      }
+    }
+
+    generateBtn.addEventListener('click', generateCircuit);
+    saveCircuitBtn.addEventListener('click', saveCircuit);
+    loadCircuitBtn.addEventListener('click', loadCircuit);
+    deleteCircuitBtn.addEventListener('click', deleteCircuit);
+    loadCircuitSelect.addEventListener('change', () => {
+      const has = !!loadCircuitSelect.value;
+      loadCircuitBtn.disabled = !has;
+      deleteCircuitBtn.disabled = !has;
+    });
+
+    // ─── Init ─────────────────────────────────────────────────────────────────
+    window.addEventListener('load', async () => {
+      await fetchExercises();
+      await populateSavedCircuits();
+    });
+  </script>
+</body>
+</html>
